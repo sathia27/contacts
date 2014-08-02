@@ -38,11 +38,21 @@ exports.show = function(request, response){
 
 exports.update = function(request, response){
   request.body.email_address = request.body.email_address.split("\n");
-  Contact.update({_id: request.params.id}, {$set: request.body}, function(error, contact){
+  Contact.findById(request.params.id, function(error, contact){
     if(error){
-      response.send(400, 'Cannot update');
+      response.send(400, 'Cannot fetch');
     } else{
-      response.send(contact);
+      if(request.files && request.files.image && !request.body.no_image){
+        contact.set('photo.file', request.files.image[0]);
+      }
+      contact.set(request.body);
+      contact.save(function(error, c){
+        if(error){
+          response.send(400, 'Cannot update');
+        } else{
+          response.send(200, c);
+        }
+      });
     }
   });
 };

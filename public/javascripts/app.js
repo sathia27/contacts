@@ -28,15 +28,6 @@ var FormView = Backbone.View.extend({
     'submit form': 'saveContact'
   },
   
-  // initialize: function(){
-  //   this.model.on("change", this.updateItem, this);
-  // },
-
-  // updateItem: function(){
-  //   var view = new ContactListView({model: this.model});
-  //   $("#contacts").append(view.render().el);
-  // },
-
   render: function() {
     this.$el.html(this.template(this.model.toJSON()));
     return this;
@@ -45,30 +36,21 @@ var FormView = Backbone.View.extend({
   uploadAndSaveContact: function(){
     var self = this;
     var id = this.model.id;
-    var url = null;
-    var method = null;
-    if(id){
-      url = ('/api/contacts/' + id);
-      method = "PUT";
-    } else {
-      url = '/api/contacts';
-      method = "POST";
-    }
     $.ajax({
-      url: url,
+      url: (id ? ('/api/contacts/' + id) : "/api/contacts"),
       processData: false,
       cache: false,
       contentType: false,
-      type: method,
+      type: (id ? 'PUT' : "POST"),
       data: this.data,
-      success: function(result){
+      success: function(result)
+      {
         self.postSave(result);
       }
     });
   },
 
   postSave: function(result){
-    console.log("Edit");
     app.navigate("", {trigger: true, replace: true});
   },
 

@@ -17,7 +17,6 @@ fs.readdirSync(models_path).forEach(function (file) {
 var app = express();
 
 
-mongoose.connect('mongodb://localhost/contact_book');
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -35,7 +34,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
 if ('development' == app.get('env')) {
+  mongoose.connect('mongodb://localhost/contact_book');
   app.use(express.errorHandler());
+} else{
+  mongoose.connect('mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/');
+
 }
 
 //app.get('/', contacts.home);
