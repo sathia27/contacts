@@ -10,12 +10,12 @@ var ContactList = Backbone.Collection.extend({
 });
 
 var ContactListView = Backbone.View.extend({
-
+  
   template: _.template($('#contactTemplate').html()),
   initialize: function() {
     this.model.bind('change', this.render, this);
   },
-
+  
   render: function() {
     this.$el.html(this.template(this.model.toJSON()));
     return this;
@@ -28,44 +28,59 @@ var FormView = Backbone.View.extend({
     'submit form': 'saveContact'
   },
   
-  initialize: function(){
-    this.model.on("change", this.updateItem, this);
-  },
+  // initialize: function(){
+  //   this.model.on("change", this.updateItem, this);
+  // },
 
-  updateItem: function(){
-    var view = new ContactListView({model: this.model});
-    $("#contacts").append(view.render().el);
-  },
+  // updateItem: function(){
+  //   var view = new ContactListView({model: this.model});
+  //   $("#contacts").append(view.render().el);
+  // },
 
   render: function() {
-    this.$el.html(this.template);
+    this.$el.html(this.template(this.model.toJSON()));
     return this;
   },
 
-  saveContact: function(){
-    var file_obj = $("#pic")[0].files[0];
-    var data = new FormData( $('form').get(0) );
-    data.append('image', file_obj);
+  uploadAndSaveContact: function(){
     var self = this;
+    var id = this.model.id;
+    var url = null;
+    var method = null;
+    if(id){
+      url = ('/api/contacts/' + id);
+      method = "PUT";
+    } else {
+      url = '/api/contacts';
+      method = "POST";
+    }
     $.ajax({
-      url: '/api/contacts',
-      enctype: 'multipart/form-data',
+      url: url,
       processData: false,
       cache: false,
       contentType: false,
-      type: 'POST',
-      data: data,
-      success: function(data){
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          if(reader.result){
-            data.photo = { thumb: { path: '/', temp: reader.result } };
-          }
-          self.model.set(data);
-        };
-        reader.readAsDataURL(file_obj);
+      type: method,
+      data: this.data,
+      success: function(result){
+        self.postSave(result);
       }
     });
+  },
+
+  postSave: function(result){
+    console.log("Edit");
+    app.navigate("", {trigger: true, replace: true});
+  },
+
+  saveContact: function(){
+    this.file_obj = $("#pic")[0].files[0];
+    this.data = new FormData( $('form').get(0) );
+    if(this.file_obj){
+      this.data.append('image', this.file_obj); 
+    } else{
+      this.data.append("no_image", true);
+    }
+    this.uploadAndSaveContact();
     return false;
   }
 });
@@ -75,6 +90,15 @@ var FormView = Backbone.View.extend({
 var ContactView = Backbone.View.extend({
 
   template: _.template($('#contactViewTemplate').html()),
+
+  events: {
+    'click .icon-delete': 'deleteContact',
+  },
+
+  deleteContact: function(){
+    this.model.destroy();
+    app.navigate("", {trigger: true, replace: true});
+  },
 
   render: function() {
     this.$el.html(this.template(this.model.toJSON()));
@@ -87,20 +111,31 @@ var ContactView = Backbone.View.extend({
 var AppRouter = Backbone.Router.extend({
   routes: {
     "": "contactListItem",
+    "contacts/new": "contactNew",
+    "contacts/:id/edit": "contactEdit",
     "contacts/:id": "contactDetail",
   },
-  
 
   listItem: function(contact){
     var view = new ContactListView({model: contact});
     $("#contacts").append(view.render().el);
   },
 
+  contactNew: function(){
+    $("#contacts,#contact_form").html("");
+    var view = new FormView({ model: new Contact({first_name: "", last_name: "", email_address_sting: ""}) });
+    $("#contact_form").append(view.render().el);
+  },
+  
+  contactEdit: function(id){
+    $("#contacts,#contact_form").html("");
+    this.contact = this.contactList.get(id);
+    var view = new FormView({ model: this.contact });
+    $("#contact_form").append(view.render().el);
+  },
 
   contactListItem: function(){
-    $("#contacts").html("");
-    var view = new FormView({ model: new Contact() });
-    $("#contact_form").append(view.render().el);
+    $("#contacts,#contact_form").html("");
     this.contactList = new ContactList({});
     this.contactList.on('add', this.listItem, this);
     this.contactList.fetch();
@@ -108,10 +143,6 @@ var AppRouter = Backbone.Router.extend({
 
   contactDetail: function(id){
     $("#contacts,#contact_form").html("");
-    if(!this.contactList){
-      this.contactList = new ContactList({});
-      this.contactList.fetch();
-    }
     this.contact = this.contactList.get(id);
     var view = new ContactView({model: this.contact});
     $("#contacts").append(view.render().el);

@@ -40,6 +40,8 @@ if ('development' == app.get('env')) {
 
 //app.get('/', contacts.home);
 app.get('/api/contacts', contacts.index);
+app.get('/api/contacts/:id', contacts.show);
+
 app.post('/api/contacts', contacts.add);
 app.put('/api/contacts/:id', contacts.update);
 app.delete('/api/contacts/:id', contacts.remove);

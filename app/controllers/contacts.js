@@ -11,7 +11,10 @@ exports.index = function(request, response){
 
 exports.add = function(request, response){
   contact = new Contact(request.body);
-  if(request.files && request.files.image) contact.set('photo.file', request.files.image[0]);
+  request.body.email_address = request.body.email_address.split("\n");
+  if(request.files && request.files.image && !request.body.no_image){
+    contact.set('photo.file', request.files.image[0]);
+  } 
   contact.save(function(error, contact){
     if(error){
       response.send(400, 'Cannot save');
@@ -21,10 +24,22 @@ exports.add = function(request, response){
   });
 };
 
+
+exports.show = function(request, response){
+  Contact.findById(request.params.id, function(error, contact){
+    if(error){
+      response.send(400, 'Invalid id for contact');
+    } else{
+      response.send(contact);
+    }
+  });
+};
+
+
 exports.update = function(request, response){
+  request.body.email_address = request.body.email_address.split("\n");
   Contact.update({_id: request.params.id}, {$set: request.body}, function(error, contact){
     if(error){
-      console.log(error);
       response.send(400, 'Cannot update');
     } else{
       response.send(contact);

@@ -6,8 +6,6 @@ var path = require("path");
 var uploads_base = path.join(__dirname, "../../public/uploads");
 var uploads = path.join(uploads_base, "u");
 
-console.log(uploads);
-console.log(uploads_base);
 
 var ContactSchema = new Schema({
     first_name: {type: String, index: true},
@@ -16,6 +14,9 @@ var ContactSchema = new Schema({
     created_at: Date,
     email_address: Array,
     updated_at: Date
+},{
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true }
 });
 
 ContactSchema.plugin(thumbnailPlugin, {
@@ -29,6 +30,14 @@ ContactSchema.plugin(thumbnailPlugin, {
                     });
 
 ContactSchema.path('first_name').required(true, 'First name cannot be blank');
+
+ContactSchema.virtual('first_letter').get(function(){
+  return this.first_name[0].toUpperCase();
+});
+ContactSchema.virtual('email_address_sting').get(function(){
+  return this.email_address.join("\n");
+});
+
 
 
 module.exports = mongoose.model('Contact', ContactSchema);
