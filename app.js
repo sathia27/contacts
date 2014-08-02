@@ -37,8 +37,7 @@ if ('development' == app.get('env')) {
   mongoose.connect('mongodb://localhost/contact_book');
   app.use(express.errorHandler());
 } else{
-  mongoose.connect('mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/');
-
+  mongoose.connect('mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/contact_book');
 }
 
 //app.get('/', contacts.home);
