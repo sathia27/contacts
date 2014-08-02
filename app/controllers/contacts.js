@@ -11,7 +11,7 @@ exports.index = function(request, response){
 
 exports.add = function(request, response){
   contact = new Contact(request.body);
-  contact.set('photo.file', request.files.image);
+  if(request.files && request.files.image) contact.set('photo.file', request.files.image[0]);
   contact.save(function(error, contact){
     if(error){
       response.send(400, 'Cannot save');

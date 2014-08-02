@@ -42,7 +42,11 @@
       <a href="#contacts/<%= _id %>" class="item">
         <ul class="contact">
           <% if(photo.thumb.path){ %>
-            <li><img src="/uploads/u/<%= photo.thumb.name %>" /></li>
+            <% if(photo.thumb.name){ %>
+              <li><img src="/uploads/u/<%= photo.thumb.name %>" /></li>
+            <% } else if(photo.thumb.temp){ %>
+              <li><img style="width:80px;" src="<%= photo.thumb.temp %>" /></li>
+            <% } %>
           <% } %>
           <li class="first_name"><%= first_name %></li>
           <li class="last_name"><%= last_name %></li>

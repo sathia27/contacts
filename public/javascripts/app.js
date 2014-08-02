@@ -32,8 +32,8 @@ var FormView = Backbone.View.extend({
     this.model.on("change", this.updateItem, this);
   },
 
-  updateItem: function(model){
-    var view = new ContactListView({model: model || this.model});
+  updateItem: function(){
+    var view = new ContactListView({model: this.model});
     $("#contacts").append(view.render().el);
   },
 
@@ -44,21 +44,26 @@ var FormView = Backbone.View.extend({
 
   saveContact: function(){
     var file_obj = $("#pic")[0].files[0];
-    // this.model.set({
-    //   first_name: $("#first_name").val(),
-    //   last_name: $("#last_name").val(),
-    //   image: file_obj
-    // });
-    // this.model.save();
-    // return false;
     var data = new FormData( $('form').get(0) );
+    data.append('image', file_obj);
     var self = this;
-    $.ajax('/api/contacts', {
-      type:'POST',
-      data: data,
+    $.ajax({
+      url: '/api/contacts',
+      enctype: 'multipart/form-data',
+      processData: false,
+      cache: false,
       contentType: false,
-      success: function(data){ 
-        self.model.set(data);
+      type: 'POST',
+      data: data,
+      success: function(data){
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          if(reader.result){
+            data.photo = { thumb: { path: '/', temp: reader.result } };
+          }
+          self.model.set(data);
+        };
+        reader.readAsDataURL(file_obj);
       }
     });
     return false;
